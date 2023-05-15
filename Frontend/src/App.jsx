@@ -1,26 +1,30 @@
-import { useRef, useEffect, useState } from "react";
-import axios from "axios";
+import { useRef, useEffect } from "react";
+import { useData } from "./usedata";
 import Chart from "chart.js/auto";
+import "./App.css";
+import tttLogo from "./assets/ttt-black.svg";
 
 function App() {
-  const [Final_Data, setFinal_Data] = useState([]);
+  const { Final_Data, loadTextFile, handleExport } = useData();
   const canvasRef = useRef(null);
   //Generating the graph
+  //Calling UseEffect As the Changes in FinalData
   useEffect(() => {
     if (Final_Data.length === 0) return;
 
-    const labels = Final_Data.map((tuple) => tuple[0]);
-    const counts = Final_Data.map((tuple) => tuple[1]);
+    const labels_words = Final_Data.map((tuple) => tuple[0]);
+    const counts_words = Final_Data.map((tuple) => tuple[1]);
 
     const chartData = {
-      labels: labels,
+      labels: labels_words,
       datasets: [
         {
           label: "Word Frequency",
-          data: counts,
-          backgroundColor: "rgba(54, 162, 235, 0.2)",
-          borderColor: "rgba(54, 162, 235, 1)",
-          borderWidth: 1,
+          data: counts_words,
+          backgroundColor: "rgba(153, 102, 255, 0.2)",
+          borderColor: "rgba(153, 102, 255, 1)",
+          borderWidth: 2,
+          hoverBackgroundColor: "rgba(255, 99, 132, 0.2)",
         },
       ],
     };
@@ -38,52 +42,35 @@ function App() {
       },
     };
 
-    const ctx = canvasRef.current.getContext("2d");
-    new Chart(ctx, {
+    const histogram = canvasRef.current.getContext("2d");
+    Chart.defaults.font.size = 16;
+    Chart.defaults.font.family = "monospace";
+    Chart.defaults.font.style = "normal";
+    new Chart(histogram, {
       type: "bar",
       data: chartData,
       options: chartOptions,
     });
   }, [Final_Data]);
 
-  //Regex to filter out the content
-  const regex = /\b\w+\b/g;
-  const regex_expert = /[\w']*\p{L}*\w[\w.]*(?:-\w+.)?/gmu;
-  const contentUrl = "https://www.terriblytinytales.com/test.txt";
-  //Loading of text file by fetching from URL
-  const loadTextFile = async () => {
-    await axios
-      .get(contentUrl)
-      //If data if present in responce
-      .then((responce) => {
-        const arrayOf_string = responce.data || "";
-        const filter_words = arrayOf_string.toLowerCase().match(regex);
-        const wordCounts = {};
-        //Counting the total words
-        filter_words.forEach((word) => {
-          wordCounts[word] = (wordCounts[word] || 0) + 1;
-        });
-        //Creating tuple & Sorting
-        const arrayOf_tuples = Object.entries(wordCounts);
-        const sortedTuples = arrayOf_tuples.sort((a, b) => b[1] - a[1]);
-        //Slicing top 20 words
-        const top20_data = sortedTuples.slice(0, 20);
-        //console.log(top20_data);
-        setFinal_Data(top20_data);
-      })
-      //Error if data not-present
-      .catch((e) => {
-        console.log(e);
-      });
-    
-  };
   return (
     //Button to load the data from the URL by calling the function
     <>
-      <button onClick={loadTextFile}>Load Data</button>
-      <br />
-      <br />
-      <canvas ref={canvasRef}></canvas>
+      {/* <div>
+        <a href="https://www.terriblytinytales.com/" target="_blank">
+          <img src={tttLogo} className="logo" alt="ttt logo" />
+        </a>
+      </div> */}
+
+      <button className="btn" onClick={loadTextFile}>
+        Load Data
+      </button>
+      <canvas className="histogram" ref={canvasRef}></canvas>
+      {Final_Data.length > 0 && (
+        <button className="export" onClick={handleExport}>
+          Export
+        </button>
+      )}
     </>
   );
 }
