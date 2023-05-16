@@ -63,7 +63,7 @@ function App() {
       </div> */}
 
       <button className="btn" onClick={loadTextFile}>
-        Load Data
+        Submit
       </button>
       <canvas className="histogram" ref={canvasRef}></canvas>
       {Final_Data.length > 0 && (
